@@ -18,13 +18,20 @@ app.get('/', function (req, res) {
     res.send('Hello world, I am Tejas; chatbot at Qroods.')
 })
 
-// for Facebook verification
+/*
+  For Facebook Verification
+*/
 app.get('/webhook/', function (req, res) {
-    if (req.query['hub.verify_token'] === 'my_business_is_my_identity_verify_me') {
-        res.send(req.query['hub.challenge'])
-    }
-    res.send('Error, wrong token')
-})
+    if (req.query['hub.mode'] === 'subscribe' &&
+        req.query['hub.verify_token'] === 'my_business_is_my_identity_verify_me') {
+          console.log("Validating webhook...");
+          res.status(200).send(req.query['hub.challenge']);
+          console.log("Webhook successfully validated.");
+    } else {
+          console.error("Webhook validation failed due to token mismatch.");
+          res.sendStatus(403);
+  }
+});
 
 // Spin up the server
 app.listen(app.get('port'), function() {
@@ -36,6 +43,7 @@ app.post('/webhook/', function (req, res) {
     for (let i = 0; i < messaging_events.length; i++) {
         let event = req.body.entry[0].messaging[i]
         let sender = event.sender.id
+
         if (event.message && event.message.text) {
             let text = event.message.text
             if (text === 'Generic') {
@@ -44,6 +52,7 @@ app.post('/webhook/', function (req, res) {
             }
             sendTextMessage(sender, text.substring(0, 200) + ", Welcome to Qroods. I am Tejas, your personal virtual assistant. What are you looking for today? " )
         }
+
         if (event.postback) {
         let text = JSON.stringify(event.postback)
         sendTextMessage(sender, text.substring(0, 200), token)
@@ -88,7 +97,7 @@ function sendGenericMessage(sender) {
                     "buttons": [{
                         "type": "web_url",
                         "url": "http://www.qroods.com/",
-                        "title": "Visit our Website"
+                        "title": "View Website"
                     }, {
                         "type": "postback",
                         "title": "Order",
