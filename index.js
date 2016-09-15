@@ -66,32 +66,7 @@ const token = "EAANfFQZBqOhEBAMCZCQFVmRFFq1g2ZCwWCZATlDc8ZC61qdC1rMwzYB08SSZAQQZ
 //const token = process.env.FB_PAGE_ACCESS_TOKEN
 
 function sendTextMessage(sender, text) {
-    let messageData = {
-      "attachment": {
-          "type": "template",
-          "payload": {
-              "template_type": "generic",
-              "elements": [{
-                  "title": "Place an order",
-                  "buttons": [{
-                      "type": "web_url",
-                      "url": "http://www.qroods.com/",
-                      "title": "View Website"
-                  }, {
-                      "type": "postback",
-                      "title": "Order",
-                      "payload": "Your order has been successfully placed. Congrats!!!",
-                  }],
-              }, {
-                  "title": "Track your order",
-                  "buttons": [{
-                      "type": "postback",
-                      "title": "Track",
-                      "payload": "Your shipment is on the way...",
-                  }],
-              }]
-          }
-    }
+    let messageData = { text:text }
     request({
         url: 'https://graph.facebook.com/v2.6/me/messages',
         qs: {access_token:token},
