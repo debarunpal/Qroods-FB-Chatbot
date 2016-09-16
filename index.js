@@ -18,6 +18,9 @@ app.get('/', function (req, res) {
     res.send('Hello world, I am Tejas; chatbot at Qroods.')
 })
 
+const token = "EAANfFQZBqOhEBAMCZCQFVmRFFq1g2ZCwWCZATlDc8ZC61qdC1rMwzYB08SSZAQQZAei3VJDOsRrAMiiSxuZAsGczp4pyuZCRd6gdq4hrmUJGyFLqqB2nrl7DHWUIslVelEOu6uEhm3p2SzHJBfyTh9OBjChTjFbcgIeTuTptPo9xxygZDZD"
+//const token = process.env.FB_PAGE_ACCESS_TOKEN
+
 /*
   For Facebook Verification
 */
@@ -38,6 +41,7 @@ app.listen(app.get('port'), function() {
     console.log('running on port', app.get('port'))
 })
 
+/*
 app.post('/webhook/', function (req, res) {
     let messaging_events = req.body.entry[0].messaging
     for (let i = 0; i < messaging_events.length; i++) {
@@ -60,11 +64,46 @@ app.post('/webhook/', function (req, res) {
       }
     }
     res.sendStatus(200)
-})
+});
+*/
+app.post('/webhook/', function (req, res) {
+  var data = req.body;
 
-const token = "EAANfFQZBqOhEBAMCZCQFVmRFFq1g2ZCwWCZATlDc8ZC61qdC1rMwzYB08SSZAQQZAei3VJDOsRrAMiiSxuZAsGczp4pyuZCRd6gdq4hrmUJGyFLqqB2nrl7DHWUIslVelEOu6uEhm3p2SzHJBfyTh9OBjChTjFbcgIeTuTptPo9xxygZDZD"
-//const token = process.env.FB_PAGE_ACCESS_TOKEN
+  // Make sure this is a page subscription
+  if (data.object == 'page') {
+    // Iterate over each entry
+    // There may be multiple if batched
+    data.entry.forEach(function(pageEntry) {
+      var pageID = pageEntry.id;
+      var timeOfEvent = pageEntry.time;
 
+      // Iterate over each messaging event
+      pageEntry.messaging.forEach(function(messagingEvent) {
+        if (messagingEvent.optin) {
+          receivedAuthentication(messagingEvent);
+        } else if (messagingEvent.message) {
+          receivedMessage(messagingEvent);
+        } else if (messagingEvent.delivery) {
+          receivedDeliveryConfirmation(messagingEvent);
+        } else if (messagingEvent.postback) {
+          receivedPostback(messagingEvent);
+        } else {
+          console.log("Webhook received unknown messagingEvent: ", messagingEvent);
+        }
+      });
+    });
+
+    // Assume all went well.
+    //
+    // You must send back a 200, within 20 seconds, to let us know you've
+    // successfully received the callback. Otherwise, the request will time out.
+    res.sendStatus(200);
+  }
+});
+
+/*
+  Function sendTextMessage formats the data in the request:
+*/
 function sendTextMessage(sender, text) {
     let messageData = { text:text }
     request({
