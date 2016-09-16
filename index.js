@@ -156,7 +156,7 @@ function sendTextMessage(recipientId, messageText) {
         id: recipientId
       },
       message: {
-          text: messageText,
+          text: messageText
           attachment:{
           type:"template",
           payload:{
