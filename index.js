@@ -156,7 +156,7 @@ function sendTextMessage(recipientId, messageText) {
         id: recipientId
       },
       message: {
-          text: messageText + ", Welcome to Qroods. I am Tejas, your personal virtual assistant."
+          text: messageText,
           attachment:{
           type:"template",
           payload:{
