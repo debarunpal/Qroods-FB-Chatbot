@@ -18,7 +18,7 @@ app.get('/', function (req, res) {
     res.send('Hello world, I am Tejas; chatbot at Qroods.')
 })
 
-const token = "EAANfFQZBqOhEBAMCZCQFVmRFFq1g2ZCwWCZATlDc8ZC61qdC1rMwzYB08SSZAQQZAei3VJDOsRrAMiiSxuZAsGczp4pyuZCRd6gdq4hrmUJGyFLqqB2nrl7DHWUIslVelEOu6uEhm3p2SzHJBfyTh9OBjChTjFbcgIeTuTptPo9xxygZDZD"
+const PAGE_ACCESS_TOKEN = "EAANfFQZBqOhEBAMCZCQFVmRFFq1g2ZCwWCZATlDc8ZC61qdC1rMwzYB08SSZAQQZAei3VJDOsRrAMiiSxuZAsGczp4pyuZCRd6gdq4hrmUJGyFLqqB2nrl7DHWUIslVelEOu6uEhm3p2SzHJBfyTh9OBjChTjFbcgIeTuTptPo9xxygZDZD"
 //const token = process.env.FB_PAGE_ACCESS_TOKEN
 
 /*
@@ -101,29 +101,91 @@ app.post('/webhook/', function (req, res) {
   }
 });
 
+function receivedMessage(event) {
+  var senderID = event.sender.id;
+  var recipientID = event.recipient.id;
+  var timeOfMessage = event.timestamp;
+  var message = event.message;
+
+  console.log("Received message for user %d and page %d at %d with message:",
+    senderID, recipientID, timeOfMessage);
+  console.log(JSON.stringify(message));
+
+  var messageId = message.mid;
+
+  // You may get a text or attachment but not both
+  var messageText = message.text;
+  var messageAttachments = message.attachments;
+
+  if (messageText) {
+
+    // If we receive a text message, check to see if it matches any special
+    // keywords and send back the corresponding example. Otherwise, just echo
+    // the text we received.
+    switch (messageText) {
+      case 'image':
+        sendImageMessage(senderID);
+        break;
+
+      case 'button':
+        sendButtonMessage(senderID);
+        break;
+
+      case 'generic':
+        sendGenericMessage(senderID);
+        break;
+
+      case 'receipt':
+        sendReceiptMessage(senderID);
+        break;
+
+      default:
+        sendTextMessage(senderID, messageText);
+    }
+  } else if (messageAttachments) {
+    sendTextMessage(senderID, "Message with attachment received");
+  }
+}
+
 /*
   Function sendTextMessage formats the data in the request:
 */
-function sendTextMessage(sender, text) {
-    let messageData = { text:text }
-    request({
-        url: 'https://graph.facebook.com/v2.6/me/messages',
-        qs: {access_token:token},
-        method: 'POST',
-        json: {
-            recipient: {id:sender},
-            message: messageData,
-        }
-    }, function(error, response, body) {
-        if (error) {
-            console.log('Error sending messages: ', error)
-        } else if (response.body.error) {
-            console.log('Error: ', response.body.error)
-        }
-    })
+function sendTextMessage(recipientId, messageText) {
+    var messageData = {
+        recipient: {
+        id: recipientId
+      },
+      message: {
+        text: messageText
+      }
+    };
+
+    callSendAPI(messageData);
 }
 
-function sendGenericMessage(sender) {
+function callSendAPI(messageData) {
+  request({
+    uri: 'https://graph.facebook.com/v2.6/me/messages',
+    qs: { access_token: PAGE_ACCESS_TOKEN },
+    method: 'POST',
+    json: messageData
+
+  }, function (error, response, body) {
+    if (!error && response.statusCode == 200) {
+      var recipientId = body.recipient_id;
+      var messageId = body.message_id;
+
+      console.log("Successfully sent generic message with id %s to recipient %s",
+        messageId, recipientId);
+    } else {
+      console.error("Unable to send message.");
+      console.error(response);
+      console.error(error);
+    }
+  });
+}
+
+function sendGenericMessage(senderID) {
     let messageData = {
         "attachment": {
             "type": "template",
